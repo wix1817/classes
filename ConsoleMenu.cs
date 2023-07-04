@@ -1,9 +1,52 @@
-﻿using Spectre.Console;
+﻿using classes;
+using Spectre.Console;
 
 namespace classes
 {
     internal class ConsoleMenu
     {
+        static void ShowInventory(Inventory inventory)
+        {
+            var table = new Table();
+            table.Border(TableBorder.MinimalHeavyHead);
+            table.AddColumn("Id");
+            table.AddColumn("Label");
+            table.AddColumn("Quantity");
+            table.AddColumn("Price");
+            table.AddColumn("Total");
+
+            double sum = 0;
+            foreach (var item in inventory.GetProducts())
+            {
+                table.AddRow($"{item.Id}", $"{item.Label}", $"{item.Quantity}", $"{item.Price}$", 
+                    $"{item.Price * item.Quantity}$");
+                sum += item.Price * item.Quantity;
+            }
+
+            table.AddEmptyRow();
+            table.AddRow("Total sum", "", "", "", $"[red]{sum}[/]$");
+
+            AnsiConsole.Write(table);
+        }
+
+        static string ShowOptions()
+        {
+            var options = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Select [green]option[/]")
+                    .PageSize(10)
+                    .AddChoices(new[]
+                    {
+                        "1: Add Product",
+                        "2: Show inventory",
+                        "3: Delete product",
+                        "4: Clean inventory",
+                        "0: Exit"
+                    }));
+
+            return options;
+        }
+        
         public static void Run()
         {
             var rule = new Rule("[red]Inventory[/]");
@@ -13,19 +56,7 @@ namespace classes
 
             do
             {
-
-                var options = AnsiConsole.Prompt(
-                    new SelectionPrompt<string>()
-                        .Title("Select [green]option[/]")
-                        .PageSize(10)
-                        .AddChoices(new[]
-                        {
-                            "1: Add Product",
-                            "2: Show inventory",
-                            "3: Delete product",
-                            "4: Clean inventory",
-                            "0: Exit"
-                        }));
+                var options = ShowOptions();
 
                 switch (options.First())
                 {
@@ -40,30 +71,13 @@ namespace classes
                     }
                     case '2':
                     {
-                        var table = new Table();
-                        table.Border(TableBorder.MinimalHeavyHead);
-                        table.AddColumn("Id");
-                        table.AddColumn("Label");
-                        table.AddColumn("Quantity");
-                        table.AddColumn("Price");
-                        table.AddColumn("Total");
-
-                        double sum = 0;
-                        foreach (var item in inventory.GetProducts())
-                        {
-                            table.AddRow($"{item.Id}", $"{item.Label}", $"{item.Quantity}", $"{item.Price}$", $"{item.Price * item.Quantity}$");
-                            sum += item.Price * item.Quantity;
-                        }
-
-                        table.AddEmptyRow();
-                        table.AddRow("Total sum", "", "", "", $"[red]{sum}[/]$");
-
-                        AnsiConsole.Write(table);
+                        ShowInventory(inventory);
                         break;
                     }
                     case '3':
                     {
-                        var mes = inventory.DeleteProduct(AnsiConsole.Ask<int>("Input [green]id of product[/]:"));
+                        var mes = inventory.DeleteProduct(AnsiConsole.Ask<int>(
+                            "Input [green]id of product[/]:"));
                         if (mes) { AnsiConsole.MarkupLine("[green]Sucсess[/] "); }
                         else { AnsiConsole.MarkupLine("[red]Error![/] "); }
                         break;
